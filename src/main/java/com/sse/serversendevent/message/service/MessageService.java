@@ -12,37 +12,40 @@ import java.util.concurrent.Executors;
 
 @Service
 public class MessageService {
-
     private final MessageRepository messageRepository;
 
+    private final ServerSendEventService serverSendEventService;
+
     @Autowired
-    public MessageService(MessageRepository messageRepository) { this.messageRepository = messageRepository;}
+    public MessageService(MessageRepository messageRepository, ServerSendEventService serverSendEventService) {
+        this.messageRepository = messageRepository;
+        this.serverSendEventService = serverSendEventService;
+    }
 
     public List<Message> getMessages() {
         return  messageRepository.findAll();
     }
 
-    public void addNewMessage(Message message, SseEmitter emitter) {
+    public void addNewMessage(Message message) {
         Optional<Message> messageOptional = messageRepository.findById(message.getId());
 
         if(messageOptional.isPresent()) {
             throw new IllegalStateException("this message already exists");
         }
-
         messageRepository.save(message);
 
-//        Executors.newSingleThreadExecutor().execute(() -> {
+        Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 SseEmitter.SseEventBuilder event = SseEmitter.event()
                     .id(String.valueOf(message.getId()))
                     .name("message")
                     .data(message);
+                System.out.println( this.serverSendEventService.getEmitter());
 
-                emitter.send(event);
+                this.serverSendEventService.getEmitter().send(event);
             } catch (Exception ex) {
-                System.out.println(ex);
-                emitter.completeWithError(ex);
+                this.serverSendEventService.getEmitter().completeWithError(ex);
             }
-//        });
+        });
     }
 }
