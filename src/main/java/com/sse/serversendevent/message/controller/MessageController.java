@@ -26,4 +26,9 @@ public class MessageController {
     public void registerNewMessage(@RequestBody Message message) {
         messageService.addNewMessage(message);
     }
+
+    @DeleteMapping(value = "/delete/{id}")
+    public void deleteMessage(@PathVariable Long id) {
+        messageService.deleteMessage(id);
+    }
 }

@@ -46,4 +46,26 @@ public class MessageService {
             }
         });
     }
+
+    public void deleteMessage(Long id) {
+        Optional<Message> messageOptional = messageRepository.findById(id);
+
+        if(messageOptional.isPresent()) {
+            messageRepository.deleteById(id);
+
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    SseEmitter.SseEventBuilder event = SseEmitter.event()
+                            .id(String.valueOf(id))
+                            .name("delete message")
+                            .data("message with id " + id + " has been deleted");
+                    this.serverSendEventService.getEmitter().send(event);
+                } catch (Exception ex) {
+                    this.serverSendEventService.getEmitter().completeWithError(ex);
+                }
+            });
+        } else {
+            throw new IllegalStateException("this message not exists");
+        }
+    }
 }
