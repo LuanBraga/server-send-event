@@ -40,8 +40,6 @@ public class MessageService {
                     .id(String.valueOf(message.getId()))
                     .name("message")
                     .data(message);
-                System.out.println( this.serverSendEventService.getEmitter());
-
                 this.serverSendEventService.getEmitter().send(event);
             } catch (Exception ex) {
                 this.serverSendEventService.getEmitter().completeWithError(ex);
